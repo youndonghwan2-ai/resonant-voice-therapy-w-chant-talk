@@ -1,0 +1,520 @@
+﻿
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.app { max-width: 860px; padding: 1.5rem 1rem; font-family: var(--font-sans); }
+
+.tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.tab-btn {
+  padding: 8px 16px; border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-secondary);
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary); font-size: 13px; cursor: pointer;
+  transition: all .15s;
+}
+.tab-btn.active {
+  background: var(--color-background-primary);
+  border-color: var(--color-border-primary);
+  color: var(--color-text-primary); font-weight: 500;
+}
+.tab-btn:hover:not(.active) { background: var(--color-background-primary); }
+.panel { display: none; }
+.panel.active { display: block; }
+
+.card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+.card-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.card-sub { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 1rem; }
+
+/* ===== PANEL 1: 음성배치 ===== */
+.placement-wrap {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start;
+}
+@media (max-width: 540px) { .placement-wrap { grid-template-columns: 1fr; } }
+
+.anatomy-img-wrap {
+  position: relative; border-radius: var(--border-radius-md);
+  overflow: hidden; border: 0.5px solid var(--color-border-tertiary);
+  background: #fff;
+}
+.anatomy-img-wrap img { width: 100%; display: block; }
+
+/* Clickable zones over image */
+.zone {
+  position: absolute; border-radius: 50%;
+  cursor: pointer; transition: all .2s;
+  border: 2px solid transparent;
+  display: flex; align-items: center; justify-content: center;
+}
+.zone:hover { transform: scale(1.15); }
+.zone.active { border-color: #fff; box-shadow: 0 0 0 3px rgba(0,0,0,0.3); }
+.zone-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+}
+
+.placement-info { display: flex; flex-direction: column; gap: 10px; }
+.info-header { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 2px; }
+
+.placement-card {
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 14px; cursor: pointer; transition: all .15s;
+}
+.placement-card:hover { border-color: var(--color-border-secondary); }
+.placement-card.active { border-width: 1.5px; }
+.placement-card.n { }
+.placement-card.n.active { border-color: #185FA5; background: #E6F1FB; }
+.placement-card.x.active { border-color: #0F6E56; background: #E1F5EE; }
+.placement-card.a.active { border-color: #854F0B; background: #FAEEDA; }
+.placement-card.b.active { border-color: #993C1D; background: #FAECE7; }
+
+.pc-label { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+.pc-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.pc-sound { font-size: 11px; margin-top: 5px; color: var(--color-text-secondary); }
+
+.detail-box {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-tertiary);
+  padding: 12px 14px; min-height: 80px;
+}
+.detail-title { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+.detail-desc { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+
+.audio-guide {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  padding: 10px 14px; font-size: 12px; color: var(--color-text-secondary);
+  margin-top: 8px; border: 0.5px solid var(--color-border-tertiary);
+  line-height: 1.6;
+}
+.audio-guide strong { color: var(--color-text-primary); font-weight: 500; }
+
+/* ===== PANEL 2: 비음-유음 자극 ===== */
+.vowel-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 1rem; }
+.vowel-card {
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 14px 8px; text-align: center; cursor: pointer;
+  transition: all .15s; user-select: none;
+}
+.vowel-card:hover { background: var(--color-background-primary); border-color: var(--color-border-primary); }
+.vowel-card.done { border: 1.5px solid #0F6E56; background: #E1F5EE; }
+.vowel-char { font-size: 26px; font-weight: 500; color: var(--color-text-primary); line-height: 1.1; }
+.vowel-seq { font-size: 11px; color: var(--color-text-secondary); margin-top: 4px; }
+.vowel-seq strong { color: var(--color-text-primary); }
+
+.word-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.word-item {
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 14px; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 10px;
+}
+.word-item:hover { background: var(--color-background-primary); border-color: var(--color-border-secondary); }
+.word-item.done { border: 1.5px solid #0F6E56; background: #E1F5EE; }
+.word-nasal { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+.word-hint { font-size: 11px; color: var(--color-text-secondary); }
+.badge {
+  font-size: 10px; padding: 2px 7px; border-radius: 99px; font-weight: 600;
+  flex-shrink: 0;
+}
+.badge.m { background: #E6F1FB; color: #185FA5; }
+.badge.n { background: #FAEEDA; color: #854F0B; }
+
+.prog-wrap { margin-top: 1rem; }
+.prog-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.prog-bar { height: 4px; background: var(--color-background-secondary); border-radius: 99px; overflow: hidden; }
+.prog-fill { height: 100%; background: #0F6E56; border-radius: 99px; transition: width .3s; }
+
+.tip-box {
+  margin-top: 1rem; padding: 10px 14px;
+  background: #E6F1FB; border-radius: var(--border-radius-md);
+  border: 0.5px solid #B5D4F4; font-size: 12px; color: #0C447C; line-height: 1.6;
+}
+
+/* ===== PANEL 3: 노래조 말하기 ===== */
+.step-nav { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.step-pill {
+  padding: 6px 14px; border-radius: 99px;
+  border: 0.5px solid var(--color-border-secondary);
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary); font-size: 12px; cursor: pointer;
+  transition: all .15s;
+}
+.step-pill.active {
+  background: var(--color-background-primary);
+  border-color: var(--color-border-primary);
+  color: var(--color-text-primary); font-weight: 500;
+}
+.number-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 1rem; }
+.num-box {
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 14px 0; text-align: center; cursor: pointer;
+  transition: all .15s; user-select: none;
+}
+.num-box:hover { background: var(--color-background-primary); }
+.num-box.done { border: 1.5px solid #0F6E56; background: #E1F5EE; }
+.num-main { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+.num-sub { font-size: 11px; color: var(--color-text-secondary); }
+
+.phrase-list { display: flex; flex-direction: column; gap: 8px; }
+.phrase-item {
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 16px; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.phrase-item:hover { background: var(--color-background-primary); border-color: var(--color-border-secondary); }
+.phrase-item.done { border: 1.5px solid #0F6E56; background: #E1F5EE; }
+.phrase-text { font-size: 16px; font-weight: 500; color: var(--color-text-primary); }
+.phrase-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+.check { font-size: 16px; opacity: 0; transition: opacity .2s; color: #0F6E56; }
+.phrase-item.done .check { opacity: 1; }
+.step-panel { display: none; }
+.step-panel.active { display: block; }
+</style>
+
+<div class="app">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('tab1')">🗺 음성배치</button>
+    <button class="tab-btn" onclick="showTab('tab2')">〰 비음-유음 자극</button>
+    <button class="tab-btn" onclick="showTab('tab3')">🎵 노래조로 말하기</button>
+  </div>
+
+  <!-- ===== TAB 1: 음성배치 ===== -->
+  <div id="tab1" class="panel active">
+    <div class="card">
+      <div class="card-title">음성배치 (Voice Placement)</div>
+      <div class="card-sub">그림의 위치를 클릭하거나, 오른쪽 카드를 선택하면 각 위치의 음성 특성을 확인할 수 있습니다.</div>
+      <div class="placement-wrap">
+
+        <!-- 이미지 + 클릭 존 -->
+        <div class="anatomy-img-wrap">
+          <img src="voice_placement.jpg" alt="음성배치도 — 비강(N), 정상음성배치(X), 전(A), 후(B)" />
+          <!-- Zone N: 비강 (상단) -->
+          <div class="zone" id="zone-N" style="top:17.5%;left:38%;width:36px;height:36px;" onclick="selectZone('N')">
+            <div class="zone-dot" style="background:#185FA5;">N</div>
+          </div>
+          <!-- Zone X: 정상음성배치 (중앙) -->
+          <div class="zone" id="zone-X" style="top:35%;left:43%;width:36px;height:36px;" onclick="selectZone('X')">
+            <div class="zone-dot" style="background:#0F6E56;">X</div>
+          </div>
+          <!-- Zone A: 전 -->
+          <div class="zone" id="zone-A" style="top:38%;left:27.5%;width:36px;height:36px;" onclick="selectZone('A')">
+            <div class="zone-dot" style="background:#854F0B;">A</div>
+          </div>
+          <!-- Zone B: 후 -->
+          <div class="zone" id="zone-B" style="top:39%;left:58%;width:36px;height:36px;" onclick="selectZone('B')">
+            <div class="zone-dot" style="background:#993C1D;">B</div>
+          </div>
+        </div>
+
+        <!-- 오른쪽: 카드 목록 + 상세 -->
+        <div class="placement-info">
+          <div class="info-header">위치 선택</div>
+
+          <div class="placement-card n" id="card-N" onclick="selectZone('N')">
+            <div class="pc-label"><span style="color:#185FA5;font-weight:700;">N</span> — 비강 (Nasal cavity)</div>
+            <div class="pc-desc">코 위쪽 공간. 비음 공명이 이루어지는 부위.</div>
+            <div class="pc-sound">관련 음소: ㅁ · ㄴ · ㅇ (비음)</div>
+          </div>
+
+          <div class="placement-card x" id="card-X" onclick="selectZone('X')">
+            <div class="pc-label"><span style="color:#0F6E56;font-weight:700;">X</span> — 정상 음성 배치</div>
+            <div class="pc-desc">구강 중앙부. 건강한 발성의 기준 위치.</div>
+            <div class="pc-sound">편안하고 자연스러운 공명 위치</div>
+          </div>
+
+          <div class="placement-card a" id="card-A" onclick="selectZone('A')">
+            <div class="pc-label"><span style="color:#854F0B;font-weight:700;">A</span> — 전 (Anterior)</div>
+            <div class="pc-desc">입 앞쪽. 소리를 앞으로 띄우는 배치. 비음-유음 자극 훈련의 목표 위치.</div>
+            <div class="pc-sound">밝고 앞쪽 공명 · 허밍 훈련 시 목표</div>
+          </div>
+
+          <div class="placement-card b" id="card-B" onclick="selectZone('B')">
+            <div class="pc-label"><span style="color:#993C1D;font-weight:700;">B</span> — 후 (Posterior)</div>
+            <div class="pc-desc">인두/후두 쪽. 소리가 목 안으로 들어간 배치. 음성 과부하의 원인이 될 수 있음.</div>
+            <div class="pc-sound">어둡고 후방 공명 · 개선이 필요한 위치</div>
+          </div>
+
+          <!-- 상세 정보 박스 -->
+          <div class="detail-box" id="detail-box">
+            <div style="font-size:13px;color:var(--color-text-secondary);">위치를 클릭하면 상세 설명이 표시됩니다.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="audio-guide" style="margin-top:1rem;">
+        <strong>🎵 음성 파일 추가 방법</strong><br>
+        각 위치 카드에 음성 예시를 연결하려면 <code>selectZone()</code> 함수 내부에 아래 코드를 추가하세요:<br>
+        <code style="font-size:11px;">const audio = new Audio('/your-audio/zone_N.mp3'); audio.play();</code><br>
+        파일명을 <code>zone_N.mp3</code> / <code>zone_X.mp3</code> / <code>zone_A.mp3</code> / <code>zone_B.mp3</code>으로 지정하면 자동 연결됩니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 2: 비음-유음 자극 ===== -->
+  <div id="tab2" class="panel">
+    <!-- A: 허밍+모음 -->
+    <div class="card">
+      <div class="card-title">A. 허밍(음흠~) + 모음 5개</div>
+      <div class="card-sub">허밍으로 비강 공명(N 위치)을 활성화한 뒤, 소리를 전방(A 위치)에 띄우며 모음을 발화합니다. 완료 시 클릭.</div>
+      <div class="vowel-grid">
+        <div class="vowel-card" onclick="toggleDone(this,'vow')">
+          <div class="vowel-char">ㅏ</div>
+          <div class="vowel-seq">음흠~ <strong>마</strong></div>
+          <div class="vowel-seq" style="font-size:10px;margin-top:2px;">mhm — a</div>
+        </div>
+        <div class="vowel-card" onclick="toggleDone(this,'vow')">
+          <div class="vowel-char">ㅔ</div>
+          <div class="vowel-seq">음흠~ <strong>메</strong></div>
+          <div class="vowel-seq" style="font-size:10px;margin-top:2px;">mhm — me</div>
+        </div>
+        <div class="vowel-card" onclick="toggleDone(this,'vow')">
+          <div class="vowel-char">ㅣ</div>
+          <div class="vowel-seq">음흠~ <strong>미</strong></div>
+          <div class="vowel-seq" style="font-size:10px;margin-top:2px;">mhm — mi</div>
+        </div>
+        <div class="vowel-card" onclick="toggleDone(this,'vow')">
+          <div class="vowel-char">ㅗ</div>
+          <div class="vowel-seq">음흠~ <strong>모</strong></div>
+          <div class="vowel-seq" style="font-size:10px;margin-top:2px;">mhm — mo</div>
+        </div>
+        <div class="vowel-card" onclick="toggleDone(this,'vow')">
+          <div class="vowel-char">ㅜ</div>
+          <div class="vowel-seq">음흠~ <strong>무</strong></div>
+          <div class="vowel-seq" style="font-size:10px;margin-top:2px;">mhm — mu</div>
+        </div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span>진행도</span><span id="vow-count">0 / 5</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="vow-prog" style="width:0%"></div></div>
+      </div>
+      <div class="tip-box">
+        💡 <strong>연습 방법:</strong> 입술을 가볍게 다물고 "음~흠~" 허밍을 하면서 코와 입 앞쪽(A 위치)에서 진동을 느낍니다. 그 공명감을 그대로 유지하며 자연스럽게 모음으로 연결하세요. 처음엔 천천히, 점차 자연스러운 속도로 연습합니다.
+      </div>
+    </div>
+
+    <!-- B: 비음 포함 단어 14개 -->
+    <div class="card">
+      <div class="card-title">B. 비음(ㅁ·ㄴ) 포함 단어 14개</div>
+      <div class="card-sub">허밍 후 단어 전체를 발화합니다. 단어 첫소리가 허밍과 자연스럽게 이어지는 느낌을 목표로 합니다.</div>
+      <div class="word-grid">
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge m">ㅁ</span><div><div class="word-nasal">마음</div><div class="word-hint">음흠~ 마음</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge m">ㅁ</span><div><div class="word-nasal">미래</div><div class="word-hint">음흠~ 미래</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge m">ㅁ</span><div><div class="word-nasal">모래</div><div class="word-hint">음흠~ 모래</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge m">ㅁ</span><div><div class="word-nasal">물결</div><div class="word-hint">음흠~ 물결</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge m">ㅁ</span><div><div class="word-nasal">멜로디</div><div class="word-hint">음흠~ 멜로디</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge m">ㅁ</span><div><div class="word-nasal">명랑</div><div class="word-hint">음흠~ 명랑</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge m">ㅁ</span><div><div class="word-nasal">무지개</div><div class="word-hint">음흠~ 무지개</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge n">ㄴ</span><div><div class="word-nasal">나무</div><div class="word-hint">음흠~ 나무</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge n">ㄴ</span><div><div class="word-nasal">노래</div><div class="word-hint">음흠~ 노래</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge n">ㄴ</span><div><div class="word-nasal">눈물</div><div class="word-hint">음흠~ 눈물</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge n">ㄴ</span><div><div class="word-nasal">나비</div><div class="word-hint">음흠~ 나비</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge n">ㄴ</span><div><div class="word-nasal">낭만</div><div class="word-hint">음흠~ 낭만</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge n">ㄴ</span><div><div class="word-nasal">녹음</div><div class="word-hint">음흠~ 녹음</div></div></div>
+        <div class="word-item" onclick="toggleDone(this,'word')"><span class="badge n">ㄴ</span><div><div class="word-nasal">노을</div><div class="word-hint">음흠~ 노을</div></div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span>진행도</span><span id="word-count">0 / 14</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="word-prog" style="width:0%"></div></div>
+      </div>
+      <div class="tip-box" style="margin-top:.75rem">
+        💡 <strong>연습 방법:</strong> 허밍 "음흠~"으로 공명을 앞쪽(A 위치)에 띄운 뒤, 그 진동감을 유지하며 단어를 발화합니다. 단어의 첫 자음(ㅁ 또는 ㄴ)이 허밍과 끊기지 않고 이어지는 느낌을 목표로 하세요.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 3: 노래조로 말하기 ===== -->
+  <div id="tab3" class="panel">
+    <div class="step-nav">
+      <button class="step-pill active" onclick="showStep('s1',this)">1단계 — 숫자 세기</button>
+      <button class="step-pill" onclick="showStep('s2',this)">2단계 — 공명음 단어</button>
+      <button class="step-pill" onclick="showStep('s3',this)">3단계 — 공명음 구</button>
+    </div>
+
+    <!-- Step 1 -->
+    <div id="s1" class="step-panel active">
+      <div class="card">
+        <div class="card-title">1단계 — 노래조로 숫자 세기 (1–10)</div>
+        <div class="card-sub">각 숫자를 노래하듯 부드럽게, 음높이 변화를 주며 말합니다. 완료 시 클릭하여 체크하세요.</div>
+        <div class="number-grid">
+          <div class="num-box" onclick="toggleDone(this,'num')"><div class="num-main">하나</div><div class="num-sub">①</div></div>
+          <div class="num-box" onclick="toggleDone(this,'num')"><div class="num-main">둘</div><div class="num-sub">②</div></div>
+          <div class="num-box" onclick="toggleDone(this,'num')"><div class="num-main">셋</div><div class="num-sub">③</div></div>
+          <div class="num-box" onclick="toggleDone(this,'num')"><div class="num-main">넷</div><div class="num-sub">④</div></div>
+          <div class="num-box" onclick="toggleDone(this,'num')"><div class="num-main">다섯</div><div class="num-sub">⑤</div></div>
+          <div class="num-box" onclick="toggleDone(this,'num')"><div class="num-main">여섯</div><div class="num-sub">⑥</div></div>
+          <div class="num-box" onclick="toggleDone(this,'num')"><div class="num-main">일곱</div><div class="num-sub">⑦</div></div>
+          <div class="num-box" onclick="toggleDone(this,'num')"><div class="num-main">여덟</div><div class="num-sub">⑧</div></div>
+          <div class="num-box" onclick="toggleDone(this,'num')"><div class="num-main">아홉</div><div class="num-sub">⑨</div></div>
+          <div class="num-box" onclick="toggleDone(this,'num')"><div class="num-main">열</div><div class="num-sub">⑩</div></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-label"><span>진행도</span><span id="num-count">0 / 10</span></div>
+          <div class="prog-bar"><div class="prog-fill" id="num-prog" style="width:0%"></div></div>
+        </div>
+        <div class="tip-box" style="margin-top:.75rem">
+          💡 <strong>노래조 말하기란:</strong> 말에 노래처럼 음높이(pitch)의 오르내림을 의식적으로 주어 발화하는 방식입니다. 단조로운 억양 대신 자연스러운 곡선형 억양을 만들어 공명을 활성화합니다. 숫자를 셀 때 각 음절의 높낮이를 살짝 과장되게 표현해 보세요.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="s2" class="step-panel">
+      <div class="card">
+        <div class="card-title">2단계 — 공명음 포함 단어 (노래조)</div>
+        <div class="card-sub">ㅁ · ㄴ · ㄹ · ㅇ 등 공명음이 포함된 단어를 노래조로 발화합니다.</div>
+        <div class="phrase-list">
+          <div class="phrase-item" onclick="toggleDone(this,'w2')"><div><div class="phrase-text">나무</div><div class="phrase-sub">ㄴ 포함 — 2음절, 낮↗높</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'w2')"><div><div class="phrase-text">노래</div><div class="phrase-sub">ㄴ 포함 — 2음절</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'w2')"><div><div class="phrase-text">마을</div><div class="phrase-sub">ㅁ 포함 — 2음절</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'w2')"><div><div class="phrase-text">미소</div><div class="phrase-sub">ㅁ 포함 — 2음절</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'w2')"><div><div class="phrase-text">물망초</div><div class="phrase-sub">ㅁ·ㄴ 포함 — 3음절</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'w2')"><div><div class="phrase-text">나들이</div><div class="phrase-sub">ㄴ·ㄹ 포함 — 3음절</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'w2')"><div><div class="phrase-text">무지개</div><div class="phrase-sub">ㅁ 포함 — 3음절</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'w2')"><div><div class="phrase-text">멜로디</div><div class="phrase-sub">ㅁ·ㄹ 포함 — 3음절</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'w2')"><div><div class="phrase-text">아름다움</div><div class="phrase-sub">ㄹ·ㅁ 포함 — 4음절</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'w2')"><div><div class="phrase-text">나무늘보</div><div class="phrase-sub">ㄴ·ㄹ·ㅁ 포함 — 4음절</div></div><span class="check">✓</span></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-label"><span>진행도</span><span id="w2-count">0 / 10</span></div>
+          <div class="prog-bar"><div class="prog-fill" id="w2-prog" style="width:0%"></div></div>
+        </div>
+        <div class="tip-box" style="margin-top:.75rem">
+          💡 <strong>연습 방법:</strong> 단어 전체를 하나의 짧은 멜로디처럼 발화합니다. 첫 음절을 살짝 높이거나, 마지막 음절을 자연스럽게 내리는 식으로 곡선형 억양을 만들어 보세요.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="s3" class="step-panel">
+      <div class="card">
+        <div class="card-title">3단계 — 공명음 포함 구(句) (노래조)</div>
+        <div class="card-sub">공명음이 풍부한 짧은 구를 노래조로 발화합니다. 억양 곡선을 의식하며 연습하세요.</div>
+        <div class="phrase-list">
+          <div class="phrase-item" onclick="toggleDone(this,'p3')"><div><div class="phrase-text">나무 아래</div><div class="phrase-sub">ㄴ·ㅁ·ㄹ — 4음절 구</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'p3')"><div><div class="phrase-text">맑은 날에</div><div class="phrase-sub">ㅁ·ㄹ·ㄴ — 4음절 구</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'p3')"><div><div class="phrase-text">노래를 불러</div><div class="phrase-sub">ㄴ·ㄹ·ㅁ — 5음절 구</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'p3')"><div><div class="phrase-text">마음이 놀라</div><div class="phrase-sub">ㅁ·ㄴ·ㄹ — 5음절 구</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'p3')"><div><div class="phrase-text">무지개 너머</div><div class="phrase-sub">ㅁ·ㄴ·ㄹ — 5음절 구</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'p3')"><div><div class="phrase-text">나무늘보 노래</div><div class="phrase-sub">ㄴ·ㄹ·ㅁ·ㄴ — 6음절 구</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'p3')"><div><div class="phrase-text">멜로디가 울려</div><div class="phrase-sub">ㅁ·ㄹ·ㄴ — 6음절 구</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'p3')"><div><div class="phrase-text">아름다운 나무</div><div class="phrase-sub">ㄹ·ㅁ·ㄴ — 6음절 구</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'p3')"><div><div class="phrase-text">맑은 노래 소리</div><div class="phrase-sub">ㅁ·ㄹ·ㄴ — 7음절 구</div></div><span class="check">✓</span></div>
+          <div class="phrase-item" onclick="toggleDone(this,'p3')"><div><div class="phrase-text">나는 노래를 불러</div><div class="phrase-sub">ㄴ·ㄴ·ㄹ·ㅁ — 8음절 구</div></div><span class="check">✓</span></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-label"><span>진행도</span><span id="p3-count">0 / 10</span></div>
+          <div class="prog-bar"><div class="prog-fill" id="p3-prog" style="width:0%"></div></div>
+        </div>
+        <div class="tip-box" style="margin-top:.75rem">
+          💡 <strong>연습 방법:</strong> 구 전체를 하나의 멜로디 라인으로 생각하세요. 강세 음절에서 음높이를 올리고, 문장 끝은 자연스럽게 내립니다. 억양이 평탄해지지 않도록 주의하며, 공명음(ㅁ·ㄴ·ㄹ·ㅇ)이 나올 때 소리가 앞쪽(A 위치)에서 울리는 느낌을 유지하세요.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Tab switching
+function showTab(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Step switching (tab 3)
+function showStep(id, btn) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.step-pill').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Zone selection (tab 1)
+const zoneData = {
+  N: {
+    title: 'N — 비강 (Nasal cavity)',
+    desc: '코 안쪽 공간으로, ㅁ · ㄴ · ㅇ 같은 비음이 공명하는 부위입니다. 비음-유음 자극 훈련에서 허밍(음흠~)을 할 때 이 공간이 진동하는 것을 느낄 수 있습니다.',
+    color: '#185FA5'
+  },
+  X: {
+    title: 'X — 정상 음성 배치 (Normal placement)',
+    desc: '건강하고 편안한 발성의 기준 위치입니다. 구강 중앙부에서 소리가 공명하며, 성대에 과부하 없이 자연스러운 발성이 이루어집니다.',
+    color: '#0F6E56'
+  },
+  A: {
+    title: 'A — 전방 배치 (Anterior placement)',
+    desc: '소리를 입 앞쪽으로 띄우는 배치입니다. 비음-유음 자극 훈련에서 허밍 후 소리를 앞으로 "올려놓는" 것이 목표입니다. 밝고 명료한 음색을 만들어냅니다.',
+    color: '#854F0B'
+  },
+  B: {
+    title: 'B — 후방 배치 (Posterior placement)',
+    desc: '소리가 인두 또는 후두 쪽으로 들어간 배치입니다. 음성이 어둡고 탁하게 들리며, 성대와 인두 근육에 긴장을 유발할 수 있습니다. 훈련을 통해 A 또는 X 위치로 이동시키는 것이 목표입니다.',
+    color: '#993C1D'
+  }
+};
+
+function selectZone(z) {
+  // Reset all
+  ['N','X','A','B'].forEach(k => {
+    document.getElementById('zone-'+k).classList.remove('active');
+    document.getElementById('card-'+k).classList.remove('active');
+  });
+  // Activate
+  document.getElementById('zone-'+z).classList.add('active');
+  document.getElementById('card-'+z).classList.add('active');
+
+  const d = zoneData[z];
+  document.getElementById('detail-box').innerHTML =
+    '<div class="detail-title" style="color:'+d.color+'">'+d.title+'</div>'+
+    '<div class="detail-desc">'+d.desc+'</div>';
+
+  // Audio hook — add your file here:
+  // const audio = new Audio('/your-audio/zone_'+z+'.mp3'); audio.play();
+}
+
+// Toggle done (progress)
+const counts = { vow:0, word:0, num:0, w2:0, p3:0 };
+const totals = { vow:5, word:14, num:10, w2:10, p3:10 };
+
+function toggleDone(el, group) {
+  el.classList.toggle('done');
+  counts[group] = document.querySelectorAll('.'+group+'-done-marker').length;
+
+  // Recount
+  let cnt = 0;
+  let allItems;
+  if (group === 'vow') allItems = document.querySelectorAll('.vowel-card');
+  else if (group === 'word') allItems = document.querySelectorAll('.word-item');
+  else if (group === 'num') allItems = document.querySelectorAll('.num-box');
+  else if (group === 'w2') allItems = document.querySelectorAll('#s2 .phrase-item');
+  else if (group === 'p3') allItems = document.querySelectorAll('#s3 .phrase-item');
+
+  allItems.forEach(i => { if(i.classList.contains('done')) cnt++; });
+  const total = totals[group];
+  const pct = Math.round(cnt/total*100);
+
+  const idMap = { vow:'vow', word:'word', num:'num', w2:'w2', p3:'p3' };
+  const key = idMap[group];
+  const countEl = document.getElementById(key+'-count');
+  const progEl = document.getElementById(key+'-prog');
+  if (countEl) countEl.textContent = cnt + ' / ' + total;
+  if (progEl) progEl.style.width = pct + '%';
+}
+</script>
